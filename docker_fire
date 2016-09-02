@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# author: deniz parlak
+
+docker ps -q >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "Docker Daemon'ı ile baglantı kurulamadı."
+  exit 1
+fi
+
+var1="$(docker version | grep Version)"
+var2="Version: 1.12.1 Version: 1.12.1"
+
+echo -en '\n'
+
+if [ "$var1" != "$var2" ]
+then
+echo "Docker güncel degil! Güncellemek icin: yum -y install docker-engine"
+fi
+
+echo -en '\n'
+echo "Calısan tüm containerlar durduruluyor.."
+sleep 1
+docker stop $(docker ps -q -a)
+echo -en '\n'
+echo "Eski containerlar siliniyor.."
+sleep 1
+docker ps -a | grep 'weeks ago' | awk '{print $1}' | xargs --no-run-if-empty docker rm
+echo -en '\n'
+echo "Taglenmemis containerlar siliniyor.."
+sleep 1
+docker images | grep "<none>" | awk '{print $3}' | xargs docker rmi 2> /dev/null
+
+echo -en '\n'
+
+echo "Audit kuralları ekleniyor.."
+sleep 1
+cat << EOF >> /etc/audit/rules.d/audit.rules
+-b 320
+-w /usr/bin/docker -k docker
+-w /var/lib/docker -k docker
+-w /etc/docker -k docker
+-w /usr/lib/systemd/system/docker-registry.service -k docker
+-w /usr/lib/systemd/system/docker.service -k docker
+-w /var/run/docker.sock -k docker
+-w /usr/bin/docker-containerd -k docker
+-w /usr/bin/docker-runc -k docker
+-w /etc/docker/daemon.json -k docker
+EOF
+
+echo -en '\n'
+
+echo "Client-side imza bütünlüğü aktif ediliyor.."
+sleep 1
+cat << EOF >> /root/.bash_profile
+export DOCKER_CONTENT_TRUST=1
+EOF
+
+echo -en '\n'
+echo "Registry Daemon'ı v2 olarak baslatılıyor.."
+sleep 1
+docker daemon --disable-legacy-registry 2> /dev/null
+echo -en '\n'
+echo "Docker servisinin izinleri degistiriliyor.."
+chmod 640 /usr/lib/systemd/system/docker.service
+sleep 1
+echo -en '\n'
+echo "Güvenlik opsiyonları ve CPU & RAM kısıtlamaları aktif hale getiriliyor.."
+sleep 1
+echo "Container baslatılıyor.."
+docker run -t -i --security-opt=no-new-privileges --restart=always --interactive --tty --cpu-shares 512 --memory 512m imaj_adı:Dockerfile
