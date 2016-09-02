@@ -22,10 +22,12 @@ echo -en '\n'
 echo "Calısan tüm containerlar durduruluyor.."
 sleep 1
 docker stop $(docker ps -q -a)
+
 echo -en '\n'
 echo "Eski containerlar siliniyor.."
 sleep 1
 docker ps -a | grep 'weeks ago' | awk '{print $1}' | xargs --no-run-if-empty docker rm
+
 echo -en '\n'
 echo "Taglenmemis containerlar siliniyor.."
 sleep 1
@@ -49,7 +51,6 @@ cat << EOF >> /etc/audit/rules.d/audit.rules
 EOF
 
 echo -en '\n'
-
 echo "Client-side imza bütünlüğü aktif ediliyor.."
 sleep 1
 cat << EOF >> /root/.bash_profile
@@ -60,11 +61,14 @@ echo -en '\n'
 echo "Registry Daemon'ı v2 olarak baslatılıyor.."
 sleep 1
 docker daemon --disable-legacy-registry 2> /dev/null
+
 echo -en '\n'
 echo "Docker servisinin izinleri degistiriliyor.."
 chmod 640 /usr/lib/systemd/system/docker.service
+
 sleep 1
 echo -en '\n'
+
 echo "Güvenlik opsiyonları ve CPU & RAM kısıtlamaları aktif hale getiriliyor.."
 sleep 1
 echo "Container baslatılıyor.."
