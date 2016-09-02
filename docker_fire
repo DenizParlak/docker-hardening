@@ -60,7 +60,7 @@ EOF
 echo -en '\n'
 echo "Registry Daemon'ı v2 olarak baslatılıyor.."
 sleep 1
-docker daemon --disable-legacy-registry 2> /dev/null
+docker daemon --disable-legacy-registry --icc=false 2> /dev/null
 
 echo -en '\n'
 echo "Docker servisinin izinleri degistiriliyor.."
@@ -72,4 +72,4 @@ echo -en '\n'
 echo "Güvenlik opsiyonları ve CPU & RAM kısıtlamaları aktif hale getiriliyor.."
 sleep 1
 echo "Container baslatılıyor.."
-docker run -t -i --security-opt=no-new-privileges --restart=always --interactive --tty --cpu-shares 512 --memory 512m imaj_adı:Dockerfile
+docker run -t -i --security-opt=no-new-privileges --restart=always --interactive --tty --cpu-shares 512 --memory 512m --oom-kill-disable --cap-drop=all imaj_adı:Dockerfile
